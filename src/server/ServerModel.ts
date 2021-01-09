@@ -258,6 +258,7 @@ function getWaitingFor(
   switch (waitingFor.inputType) {
   case PlayerInputTypes.AND_OPTIONS:
   case PlayerInputTypes.OR_OPTIONS:
+  case PlayerInputTypes.SELECT_INITIAL_CARDS:
     playerInputModel.options = [];
     for (const option of (waitingFor as AndOptions | OrOptions)
       .options) {
