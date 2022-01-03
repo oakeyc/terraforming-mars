@@ -12,7 +12,7 @@ import {CorporationCard} from './cards/corporation/CorporationCard';
 import {Game} from './Game';
 import {HowToPay} from './inputs/HowToPay';
 import {IAward} from './awards/IAward';
-import {ICard, IResourceCard, TRSource} from './cards/ICard';
+import {ICard, IResourceCard, isIActionCard, TRSource} from './cards/ICard';
 import {Colony} from './colonies/Colony';
 import {ISerializable} from './ISerializable';
 import {IMilestone} from './milestones/IMilestone';
@@ -1122,15 +1122,13 @@ export class Player implements ISerializable<SerializedPlayer> {
     if (
       this.corporationCard !== undefined &&
           !this.actionsThisGeneration.has(this.corporationCard.name) &&
-          this.corporationCard.action !== undefined &&
-          this.corporationCard.canAct !== undefined &&
+          isIActionCard(this.corporationCard) &&
           this.corporationCard.canAct(this)) {
       result.push(this.corporationCard);
     }
     for (const playedCard of this.playedCards) {
       if (
-        playedCard.action !== undefined &&
-              playedCard.canAct !== undefined &&
+        isIActionCard(playedCard) &&
               !this.actionsThisGeneration.has(playedCard.name) &&
               playedCard.canAct(this)) {
         result.push(playedCard);
@@ -1567,9 +1565,18 @@ export class Player implements ISerializable<SerializedPlayer> {
       this.playedCards.push(selectedCard);
     }
 
+    // See DeclareCloneTag for why.
+    if (!selectedCard.tags.includes(Tags.CLONE)) {
+      this.onCardPlayed(selectedCard);
+    }
+
+    return undefined;
+  }
+
+  public onCardPlayed(card: IProjectCard) {
     for (const playedCard of this.playedCards) {
       if (playedCard.onCardPlayed !== undefined) {
-        const actionFromPlayedCard: OrOptions | void = playedCard.onCardPlayed(this, selectedCard);
+        const actionFromPlayedCard: OrOptions | void = playedCard.onCardPlayed(this, card);
         if (actionFromPlayedCard !== undefined) {
           this.game.defer(new DeferredAction(
             this,
@@ -1579,11 +1586,11 @@ export class Player implements ISerializable<SerializedPlayer> {
       }
     }
 
-    TurmoilHandler.applyOnCardPlayedEffect(this, selectedCard);
+    TurmoilHandler.applyOnCardPlayedEffect(this, card);
 
     for (const somePlayer of this.game.getPlayers()) {
       if (somePlayer.corporationCard !== undefined && somePlayer.corporationCard.onCardPlayed !== undefined) {
-        const actionFromPlayedCard: OrOptions | void = somePlayer.corporationCard.onCardPlayed(this, selectedCard);
+        const actionFromPlayedCard: OrOptions | void = somePlayer.corporationCard.onCardPlayed(this, card);
         if (actionFromPlayedCard !== undefined) {
           this.game.defer(new DeferredAction(
             this,
@@ -1593,9 +1600,7 @@ export class Player implements ISerializable<SerializedPlayer> {
       }
     }
 
-    PathfindersExpansion.onCardPlayed(this, selectedCard);
-
-    return undefined;
+    PathfindersExpansion.onCardPlayed(this, card);
   }
 
   private playActionCard(): PlayerInput {
