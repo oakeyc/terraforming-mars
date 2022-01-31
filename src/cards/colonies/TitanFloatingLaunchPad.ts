@@ -1,9 +1,9 @@
 import {IProjectCard} from '../IProjectCard';
-import {Tags} from '../Tags';
+import {Tags} from '../../common/cards/Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
 import {CardName} from '../../CardName';
-import {ResourceType} from '../../ResourceType';
+import {ResourceType} from '../../common/ResourceType';
 import {SelectOption} from '../../inputs/SelectOption';
 import {OrOptions} from '../../inputs/OrOptions';
 import {IResourceCard} from '../ICard';
@@ -13,6 +13,7 @@ import {DeferredAction} from '../../deferredActions/DeferredAction';
 import {SelectColony} from '../../inputs/SelectColony';
 import {CardRenderer} from '../render/CardRenderer';
 import {Card} from '../Card';
+import {IColonyTrader} from '../../colonies/IColonyTrader';
 
 export class TitanFloatingLaunchPad extends Card implements IProjectCard, IResourceCard {
   constructor() {
@@ -43,7 +44,7 @@ export class TitanFloatingLaunchPad extends Card implements IProjectCard, IResou
     });
   }
 
-  public resourceCount: number = 0;
+  public override resourceCount: number = 0;
 
   public canAct(): boolean {
     return true;
@@ -81,5 +82,31 @@ export class TitanFloatingLaunchPad extends Card implements IProjectCard, IResou
   public play(player: Player) {
     player.game.defer(new AddResourcesToCard(player, ResourceType.FLOATER, {count: 2, restrictedTag: Tags.JOVIAN}));
     return undefined;
+  }
+}
+
+export class TradeWithTitanFloatingLaunchPad implements IColonyTrader {
+  private titanFloatingLaunchPad: TitanFloatingLaunchPad | undefined;
+
+  constructor(private player: Player) {
+    const card = player.playedCards.find((card) => card.name === CardName.TITAN_FLOATING_LAUNCHPAD);
+    this.titanFloatingLaunchPad = card === undefined ? undefined : (card as TitanFloatingLaunchPad);
+  }
+
+  public canUse() {
+    return (this.titanFloatingLaunchPad?.resourceCount ?? 0) > 0 &&
+      !this.player.getActionsThisGeneration().has(CardName.TITAN_FLOATING_LAUNCHPAD);
+  }
+
+  public optionText() {
+    return 'Pay 1 Floater (use Titan Floating Launch-pad action)';
+  }
+
+  public trade(colony: Colony) {
+    // grr I wish there was a simpler syntax.
+    if (this.titanFloatingLaunchPad !== undefined) this.titanFloatingLaunchPad.resourceCount--;
+    this.player.addActionThisGeneration(CardName.TITAN_FLOATING_LAUNCHPAD);
+    this.player.game.log('${0} spent 1 floater to trade with ${1}', (b) => b.player(this.player).colony(colony));
+    colony.trade(this.player);
   }
 }

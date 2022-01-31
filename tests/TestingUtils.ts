@@ -6,8 +6,8 @@ import {ISpace} from '../src/boards/ISpace';
 import {Phase} from '../src/Phase';
 import {IParty} from '../src/turmoil/parties/IParty';
 import {Turmoil} from '../src/turmoil/Turmoil';
-import {TurmoilPolicy} from '../src/turmoil/TurmoilPolicy';
-import {LogMessage} from '../src/LogMessage';
+import {LogMessage} from '../src/common/logs/LogMessage';
+import {PolicyId} from '../src/turmoil/Policy';
 import {Log} from '../src/Log';
 import {PlayerInput} from '../src/PlayerInput';
 import {DeferredAction} from '../src/deferredActions/DeferredAction';
@@ -26,7 +26,7 @@ export class TestingUtils {
       toValue = constants.MAX_OCEAN_TILES;
     }
 
-    while (player.game.board.getOceansOnBoard() < toValue) {
+    while (player.game.board.getOceanCount() < toValue) {
       oceans.push(TestingUtils.addOcean(player));
     }
     return oceans;
@@ -70,7 +70,7 @@ export class TestingUtils {
     return Object.assign(defaultOptions, options);
   };
 
-  public static setRulingPartyAndRulingPolicy(game: Game, turmoil: Turmoil, party: IParty, policyId: TurmoilPolicy) {
+  public static setRulingPartyAndRulingPolicy(game: Game, turmoil: Turmoil, party: IParty, policyId: PolicyId) {
     turmoil.rulingParty = party;
     turmoil.politicalAgendasData.agendas.set(party.name, {bonusId: party.bonuses[0].id, policyId: policyId});
     game.phase = Phase.ACTION;
@@ -128,7 +128,7 @@ export class TestingUtils {
     expect(cb(), 'Reds in power, enough money').is.true;
   }
 
-  public static fakeCard(card: Partial<IProjectCard>) {
+  public static fakeCard(card: Partial<IProjectCard>): IProjectCard {
     const template: IProjectCard = {
       name: 'HELLO' as CardName,
       cost: 0,

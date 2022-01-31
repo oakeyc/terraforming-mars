@@ -24,16 +24,17 @@ import {ISpace, SpaceId} from './boards/ISpace';
 import {ITile} from './ITile';
 import {LogBuilder} from './LogBuilder';
 import {LogHelper} from './LogHelper';
-import {LogMessage} from './LogMessage';
+import {LogMessage} from './common/logs/LogMessage';
 import {ALL_MILESTONES} from './milestones/Milestones';
 import {ALL_AWARDS} from './awards/Awards';
 import {OriginalBoard} from './boards/OriginalBoard';
 import {PartyHooks} from './turmoil/parties/PartyHooks';
 import {Phase} from './Phase';
-import {Player, PlayerId} from './Player';
+import {Player} from './Player';
+import {PlayerId, GameId, SpectatorId} from './common/Types';
 import {PlayerInput} from './PlayerInput';
-import {ResourceType} from './ResourceType';
-import {Resources} from './Resources';
+import {ResourceType} from './common/ResourceType';
+import {Resources} from './common/Resources';
 import {DeferredAction, Priority} from './deferredActions/DeferredAction';
 import {DeferredActionsQueue} from './deferredActions/DeferredActionsQueue';
 import {SelectHowToPayDeferred} from './deferredActions/SelectHowToPayDeferred';
@@ -43,11 +44,11 @@ import {RemoveColonyFromGame} from './deferredActions/RemoveColonyFromGame';
 import {GainResources} from './deferredActions/GainResources';
 import {SerializedGame} from './SerializedGame';
 import {SerializedPlayer} from './SerializedPlayer';
-import {SpaceBonus} from './SpaceBonus';
+import {SpaceBonus} from './common/boards/SpaceBonus';
 import {SpaceName} from './SpaceName';
 import {SpaceType} from './SpaceType';
-import {Tags} from './cards/Tags';
-import {TileType} from './TileType';
+import {Tags} from './common/cards/Tags';
+import {TileType} from './common/TileType';
 import {Turmoil} from './turmoil/Turmoil';
 import {RandomMAOptionType} from './RandomMAOptionType';
 import {AresHandler} from './ares/AresHandler';
@@ -70,9 +71,6 @@ import {IPathfindersData} from './pathfinders/IPathfindersData';
 import {ArabiaTerraBoard} from './boards/ArabiaTerraBoard';
 import {AddResourcesToCard} from './deferredActions/AddResourcesToCard';
 import {isProduction} from './utils/server';
-
-export type GameId = string;
-export type SpectatorId = string;
 
 export interface Score {
   corporation: String;
@@ -506,14 +504,10 @@ export class Game implements ISerializable<SerializedGame> {
     );
   }
 
-  public noOceansAvailable(): boolean {
-    return this.board.getOceansOnBoard() >= constants.MAX_OCEAN_TILES;
-  }
-
   public marsIsTerraformed(): boolean {
     const oxygenMaxed = this.oxygenLevel >= constants.MAX_OXYGEN_LEVEL;
     const temperatureMaxed = this.temperature >= constants.MAX_TEMPERATURE;
-    const oceansMaxed = this.board.getOceansOnBoard() === constants.MAX_OCEAN_TILES;
+    const oceansMaxed = !this.canAddOcean();
     let globalParametersMaxed = oxygenMaxed && temperatureMaxed && oceansMaxed;
     const venusMaxed = this.getVenusScaleLevel() === constants.MAX_VENUS_SCALE;
 
@@ -1010,7 +1004,6 @@ export class Game implements ISerializable<SerializedGame> {
 
 
   public playerIsFinishedTakingActions(): void {
-    // Deferred actions hook
     if (this.deferredActions.length > 0) {
       this.deferredActions.runAll(() => this.playerIsFinishedTakingActions());
       return;
@@ -1046,7 +1039,7 @@ export class Game implements ISerializable<SerializedGame> {
       this.log('This game id was ' + this.id);
     }
 
-    Database.getInstance().cleanSaves(this.id, this.lastSaveId);
+    Database.getInstance().cleanSaves(this.id);
     const scores: Array<Score> = [];
     this.players.forEach((player) => {
       let corponame: string = '';
@@ -1258,20 +1251,27 @@ export class Game implements ISerializable<SerializedGame> {
     return player;
   }
 
-  public getCitiesInPlayOnMars(): number {
+  public getCitiesOnMarsCount(): number {
     return this.board.spaces.filter(
       (space) => Board.isCitySpace(space) && space.spaceType !== SpaceType.COLONY).length;
   }
-  public getCitiesInPlay(): number {
-    return this.board.spaces.filter((space) => Board.isCitySpace(space)).length;
+
+  public getCitiesCount(player?: Player): number {
+    let cities = this.board.spaces.filter((space) => Board.isCitySpace(space));
+    if (player !== undefined) cities = cities.filter(Board.ownedBy(player));
+    return cities.length;
   }
+
+  public getGreeneriesCount(player?: Player): number {
+    let greeneries = this.board.spaces.filter((space) => Board.isGreenerySpace(space));
+    if (player !== undefined) greeneries = greeneries.filter(Board.ownedBy(player));
+    return greeneries.length;
+  }
+
   public getSpaceCount(tileType: TileType, player: Player): number {
-    return this.board.spaces.filter(
-      (space) => space.tile !== undefined &&
-                  space.tile.tileType === tileType &&
-                  space.player !== undefined &&
-                  space.player === player,
-    ).length;
+    return this.board.spaces.filter(Board.ownedBy(player))
+      .filter((space) => space.tile?.tileType === tileType)
+      .length;
   }
 
   // addTile applies to the Mars board, but not the Moon board, see MoonExpansion.addTile for placing
@@ -1318,7 +1318,7 @@ export class Game implements ISerializable<SerializedGame> {
 
     // Hellas special requirements ocean tile
     if (space.id === SpaceName.HELLAS_OCEAN_TILE &&
-        this.board.getOceansOnBoard() < constants.MAX_OCEAN_TILES &&
+        this.canAddOcean() &&
         this.gameOptions.boardName === BoardName.HELLAS) {
       if (player.color !== Color.NEUTRAL) {
         this.defer(new PlaceOceanTile(player, 'Select space for ocean from placement bonus'));
@@ -1444,11 +1444,14 @@ export class Game implements ISerializable<SerializedGame> {
   }
 
   public canAddOcean(): boolean {
-    if (this.board.getOceansOnBoard() === constants.MAX_OCEAN_TILES) {
-      return false;
-    }
-    return true;
+    return this.board.getOceanCount() < constants.MAX_OCEAN_TILES;
   }
+
+  public canRemoveOcean(): boolean {
+    const count = this.board.getOceanCount();
+    return count > 0 && count < constants.MAX_OCEAN_TILES;
+  }
+
   public addOceanTile(
     player: Player, spaceId: SpaceId,
     spaceType: SpaceType = SpaceType.OCEAN): void {
@@ -1472,6 +1475,7 @@ export class Game implements ISerializable<SerializedGame> {
     space.player = undefined;
   }
 
+  // Players returned in play order starting with first player this generation.
   public getPlayers(): Array<Player> {
     // We always return them in turn order
     const ret: Array<Player> = [];
@@ -1552,11 +1556,6 @@ export class Game implements ISerializable<SerializedGame> {
 
   public static deserialize(d: SerializedGame): Game {
     const gameOptions = d.gameOptions;
-    // TODO(kberg): Remove by 2021-10-15
-    if (d.gameOptions.altVenusBoard === undefined) {
-      d.gameOptions.altVenusBoard = false;
-    }
-
     const players = d.players.map((element: SerializedPlayer) => Player.deserialize(element));
     const first = players.find((player) => player.id === d.first);
     if (first === undefined) {

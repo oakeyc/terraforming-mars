@@ -4,11 +4,11 @@ import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {CardName} from '../../CardName';
 import {CardRenderer} from '../render/CardRenderer';
-import {Tags} from '../Tags';
+import {Tags} from '../../common/cards/Tags';
 import {CardRequirements} from '../CardRequirements';
 import {Units} from '../../Units';
 import {AddResourcesToCard} from '../../deferredActions/AddResourcesToCard';
-import {ResourceType} from '../../ResourceType';
+import {ResourceType} from '../../common/ResourceType';
 import {nextToNoOtherTileFn} from '../../boards/Board';
 import {ISpace} from '../../boards/ISpace';
 import {SelectSpace} from '../../inputs/SelectSpace';
@@ -44,7 +44,7 @@ export class EarlyExpedition extends Card implements IProjectCard {
       .filter(nextToNoOtherTileFn(player.game.board));
   }
 
-  public canPlay(player: Player) {
+  public override canPlay(player: Player) {
     return player.canAdjustProduction(this.productionBox) && this.getAvailableSpaces(player).length > 0;
   }
 

@@ -14,7 +14,7 @@ import {AltSecondaryTag, CardRenderItem} from '@/cards/render/CardRenderItem';
 import {CardRenderItemType} from '@/cards/render/CardRenderItemType';
 import {CardRenderSymbol} from '@/cards/render/CardRenderSymbol';
 import {Size} from '@/cards/render/Size';
-import {Tags} from '@/cards/Tags';
+import {Tags} from '@/common/cards/Tags';
 
 // microbe, animal and plant tag could be used both as a resource and played tag
 const RESOURCE_AND_TAG_TYPES = [
@@ -182,6 +182,9 @@ export default Vue.extend({
       } else if (type === CardRenderItemType.SPECIALIZED_ROBOT) {
         classes.push('card-resource');
         classes.push('card-resource-specialized-robot');
+      } else if (type === CardRenderItemType.SEED) {
+        classes.push('card-resource');
+        classes.push('card-resource-seed');
       } else if (this.item.type === CardRenderItemType.MOON_COLONY) {
         if (this.item.secondaryTag === AltSecondaryTag.MOON_COLONY_RATE) {
           classes.push(sized('card-tile-lunar-colony-rate', this.item.size));

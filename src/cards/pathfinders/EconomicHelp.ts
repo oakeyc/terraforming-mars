@@ -4,9 +4,9 @@ import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {CardName} from '../../CardName';
 import {CardRenderer} from '../render/CardRenderer';
-import {Resources} from '../../Resources';
+import {Resources} from '../../common/Resources';
 import {PathfindersExpansion} from '../../pathfinders/PathfindersExpansion';
-import {Tags} from '../Tags';
+import {Tags} from '../../common/cards/Tags';
 import {Size} from '../render/Size';
 import {played} from '../Options';
 

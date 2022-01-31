@@ -4,12 +4,12 @@ import {Card} from '../Card';
 import {CardType} from '../CardType';
 import {CardName} from '../../CardName';
 import {CardRenderer} from '../render/CardRenderer';
-import {Tags} from '../Tags';
+import {Tags} from '../../common/cards/Tags';
 import {SelectSpace} from '../../inputs/SelectSpace';
 import {ISpace} from '../../boards/ISpace';
 import {AddResourcesToCard} from '../../deferredActions/AddResourcesToCard';
-import {ResourceType} from '../../ResourceType';
-import {TileType} from '../../TileType';
+import {ResourceType} from '../../common/ResourceType';
+import {TileType} from '../../common/TileType';
 
 export class MartianNatureWonders extends Card implements IProjectCard {
   constructor() {
@@ -32,7 +32,7 @@ export class MartianNatureWonders extends Card implements IProjectCard {
     });
   }
 
-  public canPlay(player: Player) {
+  public override canPlay(player: Player) {
     return player.game.board.getAvailableSpacesOnLand(player).length > 0;
   }
 

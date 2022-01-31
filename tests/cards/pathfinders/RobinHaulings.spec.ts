@@ -4,7 +4,7 @@ import {Game} from '../../../src/Game';
 import {TestPlayer} from '../../TestPlayer';
 import {getTestPlayer, newTestGame} from '../../TestGame';
 import {TestingUtils} from '../../TestingUtils';
-import {Tags} from '../../../src/cards/Tags';
+import {Tags} from '../../../src/common/cards/Tags';
 import {OrOptions} from '../../../src/inputs/OrOptions';
 
 describe('RobinHaulings', function() {
@@ -19,6 +19,12 @@ describe('RobinHaulings', function() {
     player = getTestPlayer(game, 0);
     player2 = getTestPlayer(game, 0);
     player.corporationCard = card;
+  });
+
+  it('play', () => {
+    expect(card.resourceCount).eq(0);
+    card.play(player);
+    expect(card.resourceCount).eq(1);
   });
 
   it('onCardPlayed', () => {

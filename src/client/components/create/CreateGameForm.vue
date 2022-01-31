@@ -38,7 +38,7 @@
                               <div v-bind:key="pCount">
                                 <input type="radio" :value="pCount" name="playersCount" v-model="playersCount" :id="pCount+'-radio'">
                                 <label :for="pCount+'-radio'">
-                                    <span v-html="pCount === 1 ? 'Solo' : pCount"></span>
+                                    {{pCount === 1 ? 'Solo' : pCount}}
                                 </label>
                               </div>
                             </template>
@@ -415,6 +415,7 @@
                   v-bind:promoCardsOption="promoCardsOption"
                   v-bind:communityCardsOption="communityCardsOption"
                   v-bind:moonExpansion="moonExpansion"
+                  v-bind:pathfindersExpansion="pathfindersExpansion"
               ></CorporationsFilter>
             </div>
 
@@ -451,7 +452,7 @@ import CardsFilter from '@/client/components/create/CardsFilter.vue';
 import Button from '@/client/components/common/Button.vue';
 import {playerColorClass} from '@/utils/utils';
 import {RandomMAOptionType} from '@/RandomMAOptionType';
-import {GameId} from '@/Game';
+import {GameId} from '@/common/Types';
 import {AgendaStyle} from '@/turmoil/PoliticalAgendas';
 
 import * as constants from '@/constants';

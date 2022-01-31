@@ -1,4 +1,5 @@
-import {Game, GameId, GameOptions, Score} from '../Game';
+import {Game, GameOptions, Score} from '../Game';
+import {GameId} from '../common/Types';
 import {SerializedGame} from '../SerializedGame';
 
 export interface IGameData {
@@ -134,7 +135,7 @@ export interface IDatabase {
      * A maintenance task on a single game to close it out upon its completion.
      * It will:
      *
-     * * Purge all saves between `(0, save_id]`.
+     * * Purge all saves between `(0, last save]`.
      * * Mark the game as finished.
      * * It also participates in purging abandoned solo games older
      *   than a given date range, regardless of the supplied `game_id`.
@@ -143,7 +144,7 @@ export interface IDatabase {
     // TODO(kberg): rename to represent that it's closing out
     // this game. Also consider not needing the save_id, and
     // also to make the maintenance behavior a first-class method.
-    cleanSaves(game_id: GameId, save_id: number): void;
+    cleanSaves(game_id: GameId): void;
 
     /**
      * A maintenance task that purges abandoned solo games older

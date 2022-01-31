@@ -2,7 +2,7 @@ import {IGlobalEvent, GlobalEvent} from './IGlobalEvent';
 import {GlobalEventName} from './GlobalEventName';
 import {PartyName} from '../parties/PartyName';
 import {Game} from '../../Game';
-import {Tags} from '../../cards/Tags';
+import {Tags} from '../../common/cards/Tags';
 import {Turmoil} from '../Turmoil';
 import {Player} from '../../Player';
 import {Board} from '../../boards/Board';
@@ -30,9 +30,9 @@ export class Election extends GlobalEvent implements IGlobalEvent {
     // Solo
     if (game.isSoloMode()) {
       if (this.getScore(game.getPlayers()[0], turmoil, game) >= 10) {
-        game.getPlayers()[0].increaseTerraformRatingSteps(2);
+        game.getPlayers()[0].increaseTerraformRatingSteps(2, {log: true});
       } else if (this.getScore(game.getPlayers()[0], turmoil, game) >= 1) {
-        game.getPlayers()[0].increaseTerraformRatingSteps(1);
+        game.getPlayers()[0].increaseTerraformRatingSteps(1, {log: true});
       }
     } else {
       const players = [...game.getPlayers()].sort(

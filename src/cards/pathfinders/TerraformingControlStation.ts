@@ -5,7 +5,7 @@ import {CardType} from '../CardType';
 import {CardName} from '../../CardName';
 import {CardRenderer} from '../render/CardRenderer';
 import {ICard} from '../ICard';
-import {Tags} from '../Tags';
+import {Tags} from '../../common/cards/Tags';
 import {played} from '../Options';
 
 export class TerraformingControlStation extends Card implements IProjectCard {
@@ -38,7 +38,6 @@ export class TerraformingControlStation extends Card implements IProjectCard {
   }
 
   public play(player: Player) {
-    // TODO(kberg): Handle Turmoil efect.
     player.increaseTerraformRatingSteps(2);
     return undefined;
   }

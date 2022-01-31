@@ -2,7 +2,7 @@ import {Player} from '../src/Player';
 import {PlayerInput} from '../src/PlayerInput';
 import {Color} from '../src/Color';
 import {Units} from '../src/Units';
-import {Tags} from '../src/cards/Tags';
+import {Tags} from '../src/common/cards/Tags';
 import {VictoryPointsBreakdown} from '../src/VictoryPointsBreakdown';
 
 export class TestPlayer extends Player {
@@ -54,24 +54,24 @@ export class TestPlayer extends Player {
     };
   }
 
-  public getVictoryPoints(): VictoryPointsBreakdown {
+  public override getVictoryPoints(): VictoryPointsBreakdown {
     this.victoryPointsBreakdown = super.getVictoryPoints();
     return this.victoryPointsBreakdown;
   }
 
-  public getStandardProjectOption() {
+  public override getStandardProjectOption() {
     return super.getStandardProjectOption();
   }
 
   public tagsForTest: Partial<TagsForTest> | undefined = undefined;
 
-  public getRawTagCount(tag: Tags, includeEventsTags:boolean = false): number {
+  public override getRawTagCount(tag: Tags, includeEventsTags:boolean = false): number {
     return this.tagsForTest !== undefined ?
       this.tagsForTest[tag] ?? 0 :
       super.getRawTagCount(tag, includeEventsTags);
   }
 
-  public runInput(input: ReadonlyArray<ReadonlyArray<string>>, pi: PlayerInput): void {
+  public override runInput(input: ReadonlyArray<ReadonlyArray<string>>, pi: PlayerInput): void {
     super.runInput(input, pi);
   }
 
